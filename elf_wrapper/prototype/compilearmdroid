@@ -10,9 +10,9 @@ SYSROOT=/home/susingha/checkout/android-ndk-r9d/platforms/android-14/arch-arm/
 GCC=${TOOLCHAIN}/bin/arm-linux-androideabi-gcc
 CFLAGS="-g3 --sysroot=${SYSROOT}"
 
-rm -f *.so test
+rm -f *.so main
 
-${GCC} ${CFLAGS}       -shared -o libtest1.so libtest1.c
-${GCC} ${CFLAGS} -fPIC -shared -o libtest2.so libtest2.c
+${GCC} ${CFLAGS} -fPIC -shared -o libmydyn1.so libmydyn1.c
+${GCC} ${CFLAGS} -fPIC -shared -o libmydyn2.so libmydyn2.c
 
-${GCC} ${CFLAGS} -L$PWD -o test test.c elf_hook.c -ltest1 -ltest2 -ldl
+${GCC} ${CFLAGS} -L$PWD -o main main.c -lmydyn1 -ldl

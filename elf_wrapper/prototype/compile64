@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# rm -f *.so main
+
+#gcc -g3 -m64 -fPIC -shared -o libmydyn1.so libmydyn1.c
+#gcc -g3 -m64 -fPIC -shared -o libmydyn2.so libmydyn2.c
+
+#gcc -g3 -m64 -L$PWD -fPIC -shared -o libintermediate.so libintermediate.c -lmydyn1
+#gcc -g3 -m64 -L$PWD               -o main main.c -lintermediate -ldl
+ gcc          -L$PWD               -o main main.c -lintermediate

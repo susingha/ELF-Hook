@@ -39,6 +39,7 @@ int main()
     if (NULL == original1 || NULL == original2)
         fprintf(stderr, "Redirection failed!\n");
 
+    puts("sup:2");
     libtest1();  //calls hooked_puts() twice
     libtest2();  //calls hooked_puts() twice
     puts("-----------------------------");

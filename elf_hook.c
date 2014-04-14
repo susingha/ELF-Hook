@@ -321,7 +321,7 @@ int get_module_base_address(char const *module_filename, void *handle, void **ba
 
     *base = NULL;
 
-    descriptor = open(module_filename, O_RDONLY);
+    descriptor = open(module_filename, O_RDWR);
 
     if (descriptor < 0)
         return errno;
@@ -411,7 +411,8 @@ void *elf_hook(char const *module_filename, void const *module_address, char con
     if (!pagesize)
         pagesize = sysconf(_SC_PAGESIZE);
 
-    descriptor = open(module_filename, O_RDONLY);
+    puts("sup:1");
+    descriptor = open(module_filename, O_RDWR);
 
     if (descriptor < 0)
         return original;
@@ -429,14 +430,17 @@ void *elf_hook(char const *module_filename, void const *module_address, char con
         free(symbol);
         close(descriptor);
 
+    puts("sup:0");
         return original;
     }
 //release the data used
+    puts("sup:ok");
     free(dynsym);
     free(symbol);
 
     rel_plt_table = (Elf_Rel *)(((size_t)module_address) + rel_plt->sh_addr);  //init the ".rel.plt" array
     rel_plt_amount = rel_plt->sh_size / sizeof(Elf_Rel);  //and get its size
+    puts("sup:1 ok");
 
     rel_dyn_table = (Elf_Rel *)(((size_t)module_address) + rel_dyn->sh_addr);  //init the ".rel.dyn" array
     rel_dyn_amount = rel_dyn->sh_size / sizeof(Elf_Rel);  //and get its size
@@ -444,16 +448,25 @@ void *elf_hook(char const *module_filename, void const *module_address, char con
     free(rel_plt);
     free(rel_dyn);
 //and descriptor
+    puts("sup:2 ok");
     close(descriptor);
 //now we've got ".rel.plt" (needed for PIC) table and ".rel.dyn" (for non-PIC) table and the symbol's index
-    for (i = 0; i < rel_plt_amount; ++i)  //lookup the ".rel.plt" table
+    for (i = 0; i < rel_plt_amount; ++i) { //lookup the ".rel.plt" table
+    puts("sup:3 ok");
         if (ELF_R_SYM(rel_plt_table[i].r_info) == name_index)  //if we found the symbol to substitute in ".rel.plt"
         {
+    puts("sup:4 ok");
+            printf("address = %p\n", (void *)(((size_t)module_address) + rel_plt_table[i].r_offset));
+	    // sleep(3000);
             original = (void *)*(size_t *)(((size_t)module_address) + rel_plt_table[i].r_offset);  //save the original function address
+    puts("sup:4.1 ok. sleeping"); getc(stdin);
             *(size_t *)(((size_t)module_address) + rel_plt_table[i].r_offset) = (size_t)substitution;  //and replace it with the substitutional
+    puts("sup:4.2 ok");
 
             break;  //the target symbol appears in ".rel.plt" only once
         }
+    }
+    puts("sup:5 ok");
 
     if (original)
         return original;
