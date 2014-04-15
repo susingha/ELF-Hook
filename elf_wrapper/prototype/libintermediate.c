@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+int myfunc1();
+
 int intermediate() {
     int i = 0;
 
