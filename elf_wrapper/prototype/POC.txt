@@ -1,0 +1,18 @@
+
+
+1st test:
+=========
+take libintermediate.so
+one of the dynamic entries would point to start of libc.so or something like that
+create one more dynamic entry in the beginning of the stack that would point to   ibc.so or bc.so or just c.so
+hence extra dependency added which is c.so before libc.so
+
+we create the c.so and put it in the path. the loader searches symbols in c.so before searching in libc.so
+
+2nd test:
+=========
+take an app and see if we are able to pack another c.so file inside the apk and whether the app can find it in some way.
+it doesnt matter if the folder is searched before or after the LD_LIBRARY_PATH
+
+
+

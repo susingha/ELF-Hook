@@ -15,7 +15,7 @@ rm -f *.so main
 ${GCC} ${CFLAGS} -fPIC -shared -o libmydyn1.so libmydyn1.c
 ${GCC} ${CFLAGS} -fPIC -shared -o libmydyn2.so libmydyn2.c
 
-${GCC} ${CFLAGS} -L$PWD -fPIC -shared -o libintermediate.so libintermediate.c -lmydyn1
+${GCC} ${CFLAGS} -L$PWD -fPIC -shared -o libintermediate.so libintermediate.c -lmydyn1 -lmydyn2
 ${GCC} ${CFLAGS} -L$PWD -o main main.c -lintermediate -ldl
 
 
