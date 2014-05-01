@@ -18,5 +18,6 @@ ${GCC} ${CFLAGS} -fPIC -shared -o libmydyn2.so libmydyn2.c
 ${GCC} ${CFLAGS} -L$PWD -fPIC -shared -o libintermediate.so libintermediate.c -lmydyn1 -lmydyn2
 ${GCC} ${CFLAGS} -L$PWD -o main main.c -lintermediate -ldl
 
+${GCC} ${CFLAGS} -fPIC -shared -o ibc.so ibc.c
 
 

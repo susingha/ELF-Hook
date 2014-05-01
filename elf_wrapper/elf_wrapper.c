@@ -44,9 +44,6 @@ typedef struct
     } d_un;
 } Elf32_Dyn;
 
-
-
-
 /*
   ---------------------------------------------------------------
   | Function: CCDumpData
@@ -155,8 +152,9 @@ void* locate_end_of_library(Elf32_Dyn *sh_dyn, int num_entries){
 
 
 
-void push_down_stack(void *start_of_stack, void *end_of_stack)
+void push_down_stack(void *start_of_stack, void *end_of_stack, Elf32_Word offset)
     {
+	Elf32_Word * offsetaddr = NULL;
     do
     {
         void *movefrom = end_of_stack - (2 * sizeof(Elf32_Word) );
@@ -164,7 +162,10 @@ void push_down_stack(void *start_of_stack, void *end_of_stack)
         end_of_stack = end_of_stack - ( 2 * sizeof(Elf32_Word) );
     }
         while( end_of_stack > start_of_stack );
-        memset(start_of_stack, 0, ( 2 * sizeof(Elf32_Word) ) );
+        // memset(start_of_stack, 0, ( 2 * sizeof(Elf32_Word) ) );
+        offsetaddr = start_of_stack;
+        offsetaddr++;
+        *offsetaddr = offset+1;
 }
 
 
@@ -188,29 +189,12 @@ void * dump_symtab(void *base, Elf32_Word size, Elf32_Word entsize){
     return base;
 
 }
-
-
-unsigned int elf_hash(const unsigned char *name)
-{
-    unsigned int h = 0, g;
-
-    while (*name) {
-	h = (h << 4) + *name++;
-	if ((g = h & 0xf0000000))
-	    h ^= g >> 24;
-	h &= ~g;
-    }
-    return h;
-}
-
-
-void dump_hash(void *base, Elf32_Word size, Elf32_Word entsize, void * symbase, char * str_tab){
+void dump_hash(void *base, Elf32_Word size, Elf32_Word entsize, Elf32_Sym * symbase, char * str_tab){
     int i;
     unsigned int nbuckets, nchains, hn;
     Elf32_Word ndx;
     Elf32_Word *ptr, *hash, *chain;
     ptr =  (Elf32_Word *)base;
-    Elf32_Sym * symbol = NULL;
 
     // return;
 
@@ -223,23 +207,15 @@ void dump_hash(void *base, Elf32_Word size, Elf32_Word entsize, void * symbase, 
     printf("ELF HASH SECTION: \n\nnbuckets = %u, nchains = %u\n\n", nbuckets, nchains);
 
 #if 0
-    for(i=0; i < nbuckets; ++i){
-        printf("%d. 0x%x\n",i, hash[i]);
+    for(i=0; i < nchains; ++i){
+        printf("0x%x\n",chain[i]);
     }
-#endif
 
-#if 1
-    // hn = elf_hash("ANativeActivity_onCreate") & nbuckets;
-    hn = elf_hash("android_main") & nbuckets;
-    printf("sup:0 hn = %u, ndx = %u\n", hn, hash[ hn ]);
+    hn = elf_hash("ANativeActivity_onCreate") & nbuckets;
     for (ndx = hash[ hn ]; ndx; ndx = chain[ ndx ]) {
-	printf("sup:1\n");
 	symbol = symbase + ndx;
 	if (strcmp("ANativeActivity_onCreate", str_tab + symbol->st_name) == 0)
-	    printf("Found match\n");
-	else
-	    printf("no match\n");
-	//return (load_addr + symbol->st_value);
+	    return (load_addr + symbol->st_value);
     }
 #endif
 
@@ -334,7 +310,7 @@ int main(int argc, char* argv[])
     }
 
     elf_vm_map = mmap(0, (num_bytes * sizeof(int)),
-                            PROT_READ /*| PROT_WRITE*/,
+                            PROT_READ | PROT_WRITE,
                             MAP_SHARED, fd_input, 0);
     
     if(elf_vm_map == MAP_FAILED){
@@ -478,8 +454,9 @@ int main(int argc, char* argv[])
 
     void*  start_library_list  =   NULL;
     void*  end_library_list    =   NULL;
+    Elf32_Word libcoffset = 0;
+
     
-#if 1
     if(sh_dyn)
     {
         int  index = sh_table[i].sh_size/sh_table[i].sh_entsize;
@@ -489,20 +466,15 @@ int main(int argc, char* argv[])
         printf("Start of library list<%#llx>\n", (unsigned long long)start_library_list);
         printf("End of library list<%#llx>\n", (unsigned long long)end_library_list);
 
-        push_down_stack( start_library_list, end_library_list);
     
+#if 1
         if(dt_str_adr!=0)
             {
             char *dt_str_start = dt_str_ptr + 1;
             do
                 {
-                    if  ( strcmp( dt_str_start, "ANativeActivity_onCreate") == 0 )
-                    {
-                        char *dt_str_end = strchr( dt_str_start, '_');
-                        *dt_str_end = 0x00;
-                        dt_str_end++;
-                        // memcpy( dt_str_end, "libca.so", sizeof("libca.so") );
-                        update_library_list( start_library_list, dt_str_end - dt_str_ptr );
+                    if  ( strcmp( dt_str_start, "libc.so") == 0 ) {
+			libcoffset = dt_str_start - dt_str_ptr;
                         break;
                     }
                     else
@@ -511,8 +483,10 @@ int main(int argc, char* argv[])
         }
         else
             printf("NO STRING TABLE found\n");
-    }
 #endif
+
+        push_down_stack( start_library_list, end_library_list, libcoffset);
+    }
 
     
     

@@ -6,7 +6,7 @@ int myfunc2();
 int intermediate() {
     int i = 0;
 
-    getchar();
+    puts("hooking puts");
 
     i = myfunc1();
     printf("myfunc1 returned: %d\n", i);
