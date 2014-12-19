@@ -13,6 +13,7 @@ int hooked_puts(char const *s)
 {
     puts(s);  //calls the original puts() from libc.so because our main executable module called "test" is intact by hook
     puts("is HOOKED!");
+    return 0;
 }
 
 int main()
